@@ -1,0 +1,2 @@
+- [Builder pitfalls](builder_pitfalls.md) — row_ids delimiter, literal-figure check, jpath dotted keys, real analytics-full file/column names
+- [Challenger sample lessons](challenger_sample_lessons.md) — recipe and pass-wording patterns rejected or accepted in challenge rounds

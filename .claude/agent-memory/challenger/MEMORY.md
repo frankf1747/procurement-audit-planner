@@ -1,0 +1,2 @@
+- [Sample recipe checks](feedback_sample_recipes.md) — read exclusions, order key, sample unit and tag filter against analytics.json top20 lists
+- [Coverage reason checks](feedback_coverage_reasons.md) — null-threshold reasons, pass criteria, memo limitations, navigating oversized analytics.json

@@ -1,0 +1,10 @@
+supplier,match_class,candidate,rule_fired,supplier_name_original,annualised_estimate
+ANDY AND ES,near_contain,ANDY COX,unique single distinctive token ANDY,ANDY AND ES LIMITED,684635.4
+BAILEYS OF NEWBURY,near_contain,BAILEYS COACHES,unique single distinctive token BAILEYS,BAILEYS OF NEWBURY,272825.4
+D J TRAVEL,near_ratio,DJ TRAVEL,SequenceMatcher ratio 0.947,D J TRAVEL,271867.64
+GLEN CLEANING COMPANY,near_contain,GLEN CLEANING,unique single distinctive token GLEN,Glen Cleaning Company Ltd,369572.48
+HDS EXPRESS TRANSPORT,near_contain,SCHOOL EXPRESS,unique single distinctive token EXPRESS,HDS EXPRESS TRANSPORT LIMITED,4166.4
+KENNET AND AVON GROUP,near_contain,KENNET AND AVON CARS,"distinctive tokens ['AVON', 'KENNET'] subset (>=2 tokens)",Kennet & Avon Group,46940.0
+POTTINGERS HIRE SERVICE,near_ratio,POTTINGERS HIRE SERVICES,SequenceMatcher ratio 0.979,POTTINGER'S HIRE SERVICE,37410.0
+SDK ENVIRONMENTAL,near_ratio,SMS ENVIRONMENTAL,SequenceMatcher ratio 0.882,SDK Environmental Ltd,12380.0
+SWAN ADVOCACY,near_contain,SWAN ADVOCACY NETWORK,"distinctive tokens ['ADVOCACY', 'SWAN'] subset (>=2 tokens)",Swan Advocacy,204864.0

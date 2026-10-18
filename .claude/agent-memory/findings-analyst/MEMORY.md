@@ -1,0 +1,8 @@
+# findings-analyst memory (method only; never evidence)
+
+- **Verifier does NOT strip ASCII hyphens** (2026-10-17). BULLET_RE in verify_history.py is a private-use range plus bullets, despite the docstring. Why: a quote with an added " - " fails. How: copy hyphens exactly as the plain (non-layout) text has them; where layout shows "x -" but plain drops the dash, quote without it. Curly quotes and en/em dashes ARE unified; "•" IS stripped.
+- **Plain text splits table columns** (2026-10-17). Completed-work appendices: directorate/service cells are emitted after all titles, and some title/opinion pairs are not adjacent. How: pair rows from `-layout`, quote "Title Opinion" only where contiguous in plain text, else quote the title alone and add a note.
+- **Strategy tables garble in plain text**: Table 1 (impact), Table 3 (appetite), Table 4 (RAG bands), Figure 1 (matrix) and Figure 4. Plain text emits Table 1 column by column (financial cells per row are contiguous: "<score> <label> <band text>"), and matrix rows as "labels... scores..." per impact row, top row = highest impact. Read structure from `-layout`, quote from plain.
+- **Short cells** (<12 chars, e.g. one-word cells) fail the length check: quote with an adjacent cell and label the evidence as spanning cells, or omit the quote with a note.
+- **Missing appendices**: plan covering report ships without its appendices (plan list, anti-fraud plan, etc.); register is exempt. Check page count / appendix list every run rather than assuming.
+- **Workflow that worked**: write a small Python builder in the scratchpad that assembles history.json with an `ev(source, page, quote, **fields)` helper, then run the verifier and fix quotes in the builder.

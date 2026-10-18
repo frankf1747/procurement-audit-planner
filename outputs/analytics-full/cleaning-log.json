@@ -1,0 +1,146 @@
+{
+  "files": [
+    "Over500_2026_P02_-_published.xlsx",
+    "Over500_2026_P03_-_published.xlsx",
+    "Over500_2026_P04_-_published.xlsx"
+  ],
+  "per_file": {
+    "Over500_2026_P02_-_published.xlsx": {
+      "header_row_sheet": 1,
+      "rows": 2892
+    },
+    "Over500_2026_P03_-_published.xlsx": {
+      "header_row_sheet": 2,
+      "rows": 3547
+    },
+    "Over500_2026_P04_-_published.xlsx": {
+      "header_row_sheet": 2,
+      "rows": 4168
+    }
+  },
+  "rows_raw": 10607,
+  "rows_after_exclusions": 8534,
+  "date_min": "2026-05-01",
+  "date_max": "2026-07-31",
+  "months_covered": 3,
+  "total_gbp_raw": 80427254.26,
+  "total_gbp_clean": 66778104.78,
+  "excluded": {
+    "redacted_supplier": {
+      "rows": 2015,
+      "gbp": 2746746.71,
+      "reason": "Supplier shown as 'Redacted' covers many payees under one label; unusable for supplier-level tests"
+    },
+    "pension_statutory": {
+      "rows": 12,
+      "gbp": 9235814.93,
+      "reason": "Pension/LGPS/superannuation contributions are statutory, not procurement"
+    },
+    "inter_authority": {
+      "rows": 46,
+      "gbp": 1666587.84,
+      "reason": "Payments to other public bodies (councils, NHS, police, HMRC, government departments) or joint arrangements, excluding 'Private Contractors' narrative"
+    }
+  },
+  "tags": {
+    "care_or_education_placement": {
+      "rows": 5839,
+      "gbp": 30571711.3,
+      "suppliers": 361
+    },
+    "grant": {
+      "rows": 339,
+      "gbp": 6033599.82,
+      "suppliers": 198
+    },
+    "agency_staff": {
+      "rows": 24,
+      "gbp": 1285541.24,
+      "suppliers": 7
+    },
+    "premises_non_procurement": {
+      "rows": 206,
+      "gbp": 568884.66,
+      "suppliers": 31
+    },
+    "general_procurement": {
+      "rows": 2126,
+      "gbp": 28318367.76,
+      "suppliers": 518
+    }
+  },
+  "regexes": {
+    "pension_statutory": "LGPS|PENSION|SUPERANNUATION",
+    "inter_authority_supplier": "\\b(?:COUNCIL|BOROUGH|COUNTY|CNCL|NHS|POLICE|FIRE AUTHORITY|FIRE AND RESCUE|HMRC|HM REVENUE|DEPARTMENT FOR|MINISTRY OF)\\b",
+    "inter_authority_narrative": "JOINT ARRANGEMENTS",
+    "grant": "GRANT",
+    "agency_staff": "AGENCY",
+    "premises_non_procurement": "RENT|RATES|WATER RATES|LEASE",
+    "placement_services_prefix": [
+      "Adult Social Care",
+      "Children's Social Care",
+      "Education"
+    ],
+    "placement_narratives": [
+      "Other agencies",
+      "Private Contractors",
+      "Voluntary Associations"
+    ]
+  },
+  "contracts": {
+    "contracts_present": true,
+    "rows_in_file": 150,
+    "warnings": [],
+    "rows_for_council": 141,
+    "rows_dropped_other_buyers": 9,
+    "organisation_names_kept": {
+      "West Berkshire Council": 115,
+      "West Berkshire": 20,
+      "WEST BERKSHIRE COUNCIL": 6
+    },
+    "organisation_names_dropped": {
+      "Ministry of Defence": 5,
+      "Westworks Procurement Ltd": 1,
+      "SOUTHAMPTON CITY COUNCIL": 1,
+      "CITY OF BRADFORD METROPOLITAN DISTRICT COUNCIL": 1,
+      "Health Education England": 1
+    },
+    "notices": 141,
+    "notices_without_supplier": 0,
+    "notice_supplier_pairs": 210,
+    "distinct_suppliers": 142,
+    "active_pairs": 131,
+    "ended_pairs": 79,
+    "active_notices": 62,
+    "ended_notices": 79,
+    "zero_value_awards": 7,
+    "rows_per_year": {
+      "2021": 7,
+      "2022": 10,
+      "2023": 39,
+      "2024": 52,
+      "2025": 28,
+      "2026": 5
+    },
+    "published_range": [
+      "2021-02-23",
+      "2026-09-09"
+    ],
+    "procedure_types": {
+      "OpenNonOJEU": 37,
+      "CallOffFromFrameworkAgreement": 30,
+      "Open": 24,
+      "Restricted": 23,
+      "CallOffFromDynamicPurchasingSystem": 9,
+      "CompetitiveQuotationNonOJEU": 8,
+      "OpenOJEU": 3,
+      "Other": 2,
+      "Other Request for Quotation (closed procedure)": 1,
+      "Negotiated": 1,
+      "NotApplicable": 1,
+      "Other Request for quotation (under 50k)": 1,
+      "Other Direct Award": 1
+    }
+  },
+  "register_present": false
+}

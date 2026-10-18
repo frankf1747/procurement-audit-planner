@@ -1,0 +1,1 @@
+- [Running the checks](running-checks.md) — run_checks.py exit codes, trace failures that belong to the challenger, where to find the auditor points

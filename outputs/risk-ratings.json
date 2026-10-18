@@ -1,0 +1,248 @@
+{
+  "generated_at": "2026-10-17",
+  "risks": [
+    {
+      "id": "R-01",
+      "theme": 1,
+      "title": "Payments to one supplier grouped under a procedure threshold",
+      "statement": "Purchases may be split across several payments so that each stays below a quote or tender threshold, which the anti-avoidance rule prohibits. This is a pattern to test, not a finding.",
+      "likelihood": 4,
+      "likelihood_justification": "Data signal in general procurement at more than one threshold: {{$.tests.split_purchases.by_threshold.25000.headline_general_procurement.windows}} supplier windows combine sub-threshold payments to cross the publication tier of {{$.tests.split_purchases.by_threshold.25000.threshold}} [metric:$.tests.split_purchases.by_threshold.25000.headline_general_procurement.windows], {{$.tests.split_purchases.by_threshold.5000.headline_general_procurement.windows}} cross {{$.tests.split_purchases.by_threshold.5000.threshold}} [metric:$.tests.split_purchases.by_threshold.5000.headline_general_procurement.windows] and {{$.tests.split_purchases.by_threshold.500000.headline_general_procurement.windows}} cross {{$.tests.split_purchases.by_threshold.500000.threshold}} [metric:$.tests.split_purchases.by_threshold.500000.headline_general_procurement.windows], against the rule that a contract must not be split or disaggregated [rule:CPR-12]. Rubric row 4. The most recent purchasing audit is not adverse [history:AUD-15], so no repeat uplift. Windows are indicators: recurring call-offs under one contract also produce them.",
+      "impact": 3,
+      "impact_justification": "Medium on the council's scale [history:$.scoring_method.impact_scale[2]]: the general-procurement windows at the publication tier total {{$.tests.split_purchases.by_threshold.25000.headline_general_procurement.gbp}} [metric:$.tests.split_purchases.by_threshold.25000.headline_general_procurement.gbp], and splitting at that tier would bypass the three-quote portal requirement [rule:CPR-53], a reasonable possibility of challenge rather than a probable one.",
+      "evidence": [
+        "rule:CPR-12",
+        "rule:CPR-53",
+        "metric:$.tests.split_purchases.by_threshold.25000.headline_general_procurement.windows",
+        "metric:$.tests.split_purchases.by_threshold.25000.headline_general_procurement.gbp",
+        "metric:$.tests.split_purchases.by_threshold.5000.headline_general_procurement.windows",
+        "metric:$.tests.split_purchases.by_threshold.500000.headline_general_procurement.windows",
+        "history:AUD-15"
+      ],
+      "proposed_focus": "Take the largest general-procurement windows at the publication tier and above, and test whether the grouped payments relate to one requirement and whether quotes, a portal exercise or a contract cover the combined value.",
+      "sample_source": "split-purchases.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-02",
+      "theme": 2,
+      "title": "Single payments sitting just below a quote or tender threshold",
+      "statement": "Individual payments may be set just under a quote or tender threshold to avoid the procedure the rules require. This is an indicator to test against the comparator band above each threshold.",
+      "likelihood": 4,
+      "likelihood_justification": "Data signal in general procurement at more than one threshold: {{$.tests.threshold_clustering.by_threshold.25000.by_tag.general_procurement.rows}} general-procurement payments fall in the band just below the publication tier [metric:$.tests.threshold_clustering.by_threshold.25000.by_tag.general_procurement.rows], {{$.tests.threshold_clustering.by_threshold.5000.by_tag.general_procurement.rows}} below {{$.tests.threshold_clustering.by_threshold.5000.threshold}} [metric:$.tests.threshold_clustering.by_threshold.5000.by_tag.general_procurement.rows] and {{$.tests.threshold_clustering.by_threshold.1000.by_tag.general_procurement.rows}} below {{$.tests.threshold_clustering.by_threshold.1000.threshold}} [metric:$.tests.threshold_clustering.by_threshold.1000.by_tag.general_procurement.rows], the bands set by App B rows A, B1 and B2 [rule:CPR-52] [rule:CPR-53]. Rubric row 4. Across all tags the comparator band just above the publication tier holds {{$.tests.threshold_clustering.by_threshold.25000.comparator_above.count}} payments against {{$.tests.threshold_clustering.by_threshold.25000.band.count}} below it [metric:$.tests.threshold_clustering.by_threshold.25000.comparator_above.count], so the band shows no excess at that tier overall; the signal is the presence of general-procurement payments to test, not a proven cluster. No adverse purchasing audit [history:AUD-15].",
+      "impact": 3,
+      "impact_justification": "Medium on the council's scale [history:$.scoring_method.impact_scale[2]]: the general-procurement payments just below the publication tier total {{$.tests.threshold_clustering.by_threshold.25000.by_tag.general_procurement.gbp}} [metric:$.tests.threshold_clustering.by_threshold.25000.by_tag.general_procurement.gbp], in the scale's Medium financial range, and the procedure avoided would be the three-quote portal exercise [rule:CPR-53].",
+      "evidence": [
+        "rule:CPR-52",
+        "rule:CPR-53",
+        "metric:$.tests.threshold_clustering.by_threshold.25000.by_tag.general_procurement.rows",
+        "metric:$.tests.threshold_clustering.by_threshold.25000.by_tag.general_procurement.gbp",
+        "metric:$.tests.threshold_clustering.by_threshold.25000.band.count",
+        "metric:$.tests.threshold_clustering.by_threshold.25000.comparator_above.count",
+        "metric:$.tests.threshold_clustering.by_threshold.5000.by_tag.general_procurement.rows"
+      ],
+      "proposed_focus": "Sample general-procurement payments in the band below the publication tier and below the tender-publication figure, and check whether each payment is a complete requirement with the quotes its value needs, or part of a larger order.",
+      "sample_source": "threshold-clustering.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-03",
+      "theme": 3,
+      "title": "High-value suppliers with no matching published contract notice",
+      "statement": "Spend with some suppliers above the publication tier may not be covered by a published contract or recorded on the contract register. The notice export is not a register, so a missing notice is an indicator to check, never evidence of off-contract spend.",
+      "likelihood": 3,
+      "likelihood_justification": "One test designed for the rule shows a general-procurement signal: {{$.tests.off_contract.unmatched_by_tag.general_procurement.suppliers}} general-procurement suppliers at or above the publication tier have no exact-match active notice [metric:$.tests.off_contract.unmatched_by_tag.general_procurement.suppliers], against the requirements to run a portal exercise at that tier [rule:CPR-53] and to keep a published register of contracts [rule:CPR-07] [rule:CPR-33]. Rubric row 3. The latest contract-letting audit is not adverse [history:AUD-01], so no repeat uplift. Older contracts, framework call-offs and notices published elsewhere will appear here without being off contract.",
+      "impact": 4,
+      "impact_justification": "Major on the council's scale [history:$.scoring_method.impact_scale[1]]: the unmatched general-procurement suppliers carry an annualised estimate of {{$.tests.off_contract.unmatched_by_tag.general_procurement.annualised_estimate}} [metric:$.tests.off_contract.unmatched_by_tag.general_procurement.annualised_estimate], and where spend exceeds the statutory threshold without advertisement [rule:CPR-10] the compliance descriptor is a high possibility of legal challenge. The council's compliance appetite names high value transactions [history:$.risk_themes[10]].",
+      "evidence": [
+        "rule:CPR-53",
+        "rule:CPR-07",
+        "rule:CPR-33",
+        "rule:CPR-10",
+        "metric:$.tests.off_contract.unmatched_by_tag.general_procurement.suppliers",
+        "metric:$.tests.off_contract.unmatched_by_tag.general_procurement.annualised_estimate",
+        "metric:$.tests.high_value_suppliers.tiers.publication_threshold.headline_general_procurement_suppliers",
+        "history:AUD-01"
+      ],
+      "proposed_focus": "Request the council's contract register and match the largest unmatched general-procurement suppliers to a contract, framework call-off or approved exception; review the near-match list before sampling.",
+      "sample_source": "high-value-suppliers.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-04",
+      "theme": 4,
+      "title": "Payments continuing after a published contract notice ended",
+      "statement": "Some suppliers may be paid after their published contract term ended without an approved extension. A newer contract may exist with no notice, so this is an indicator to check.",
+      "likelihood": 3,
+      "likelihood_justification": "One test designed for the rule shows a general-procurement signal: {{$.tests.expired_notice_spend.by_dominant_tag.general_procurement}} general-procurement suppliers were paid in the window although every matching notice had ended before it started [metric:$.tests.expired_notice_spend.by_dominant_tag.general_procurement], against the requirement for S151 approval of an extension [rule:CPR-60]. Rubric row 3. The latest contract-letting audit is not adverse [history:AUD-01].",
+      "impact": 3,
+      "impact_justification": "Medium on the council's scale [history:$.scoring_method.impact_scale[2]]: in-window spend with these suppliers is {{$.tests.expired_notice_spend.gbp_in_window}} [metric:$.tests.expired_notice_spend.gbp_in_window], within the scale's Medium financial range, and an unapproved extension is a reasonable possibility of challenge [rule:CPR-60]. The strategy names procurement contract management as a source of risk [history:$.risk_themes[7]].",
+      "evidence": [
+        "rule:CPR-60",
+        "metric:$.tests.expired_notice_spend.suppliers",
+        "metric:$.tests.expired_notice_spend.gbp_in_window",
+        "metric:$.tests.expired_notice_spend.annualised_estimate",
+        "history:$.risk_themes[7]"
+      ],
+      "proposed_focus": "For each flagged supplier, obtain the current contract or the approved extension and the S151 approval covering the payment dates.",
+      "sample_source": "expired-notice-spend.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-05",
+      "theme": 5,
+      "title": "Spend running above the published award value",
+      "statement": "Spend with some contracted suppliers may run beyond the awarded value without an approved variation. Award values may be estimates or maxima, so this is an indicator to check against variations.",
+      "likelihood": 3,
+      "likelihood_justification": "One test designed for the rule shows a signal: {{$.tests.spend_vs_award.suppliers_flagged}} of {{$.tests.spend_vs_award.suppliers_compared}} suppliers matched to a single active notice have an annualised estimate at or above the flag ratio of the award's annual rate [metric:$.tests.spend_vs_award.suppliers_flagged], against the approval required for a contract variation [rule:CPR-61] [rule:CPR-62]. The test compares only suppliers holding a published notice and carries no tag split. Rubric row 3. No adverse contract audit in history [history:AUD-01].",
+      "impact": 3,
+      "impact_justification": "Medium on the council's scale [history:$.scoring_method.impact_scale[2]]: the flagged suppliers carry an annualised estimate of {{$.tests.spend_vs_award.flagged_annualised_estimate}} [metric:$.tests.spend_vs_award.flagged_annualised_estimate], but the excess over award is unknown until variations are seen; an unapproved variation [rule:CPR-62] is a reasonable possibility of challenge.",
+      "evidence": [
+        "rule:CPR-61",
+        "rule:CPR-62",
+        "metric:$.tests.spend_vs_award.suppliers_flagged",
+        "metric:$.tests.spend_vs_award.suppliers_compared",
+        "metric:$.tests.spend_vs_award.flagged_annualised_estimate"
+      ],
+      "proposed_focus": "For the flagged suppliers, obtain the award, any approved variations and the board or Monitoring Officer and S151 approvals, and compare them with spend to date.",
+      "sample_source": "spend-vs-award.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-06",
+      "theme": 6,
+      "title": "Repeated payments of the same amount to the same supplier",
+      "statement": "Some payments may be duplicates of earlier payments of the same amount to the same supplier within a week. Legitimate repeat charges also produce this pattern, so it is an indicator to test.",
+      "likelihood": 3,
+      "likelihood_justification": "One test designed for the rule shows a general-procurement signal: {{$.tests.duplicates.different_time.by_tag.general_procurement.groups}} general-procurement groups repeat the same amount to the penny across different payment runs within seven days [metric:$.tests.duplicates.different_time.by_tag.general_procurement.groups], where every purchase must be backed by written evidence [rule:CPR-31]. Rubric row 3. The accounts payable audit gave Reasonable Assurance [history:AUD-15], so no repeat uplift.",
+      "impact": 3,
+      "impact_justification": "Medium on the council's scale [history:$.scoring_method.impact_scale[2]]: the general-procurement amount beyond the first payment in each group is {{$.tests.duplicates.different_time.by_tag.general_procurement.gbp_beyond_first}} [metric:$.tests.duplicates.different_time.by_tag.general_procurement.gbp_beyond_first], within the scale's Medium financial range, and the strategy names financial control and fraud as a source of risk [history:$.risk_themes[5]].",
+      "evidence": [
+        "rule:CPR-31",
+        "metric:$.tests.duplicates.different_time.by_tag.general_procurement.groups",
+        "metric:$.tests.duplicates.different_time.by_tag.general_procurement.gbp_beyond_first",
+        "metric:$.tests.duplicates.same_timestamp.by_tag.general_procurement.groups",
+        "history:AUD-15"
+      ],
+      "proposed_focus": "Trace the largest general-procurement groups to invoices and orders to confirm each payment is for a separate supply, and check for recovery of any true duplicate.",
+      "sample_source": "duplicates.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-07",
+      "theme": 7,
+      "title": "Waivers and exceptions to competition not approved or recorded",
+      "statement": "Competition may be waived without the approvals, exception report or record the rules require. The spend data cannot observe waivers, so this is a control gap to confirm, not a pattern in the data.",
+      "likelihood": 1,
+      "likelihood_justification": "The rules limit waivers above their threshold to urgency or Executive Director circumstances [rule:CPR-19], require approval by the Monitoring Officer and/or S151 Officer [rule:CPR-20] and full documentation [rule:CPR-24] [rule:CPR-26]. The spend data cannot observe waivers or their approvals, and no audit in history names waivers; the latest contract-letting audit is not adverse [history:AUD-01]. Rubric row 1.",
+      "impact": 4,
+      "impact_justification": "Major on the council's scale [history:$.scoring_method.impact_scale[1]]: exceptions above the relevant threshold and over the Key Decision level need S151, Monitoring Officer and Executive approval [rule:CPR-22] [rule:CPR-23], and an unsupported waiver of competition carries a high possibility of legal challenge.",
+      "evidence": [
+        "rule:CPR-19",
+        "rule:CPR-20",
+        "rule:CPR-24",
+        "rule:CPR-26",
+        "rule:CPR-23",
+        "history:AUD-01"
+      ],
+      "proposed_focus": "Request the waiver and exception register for the period and walk through approval and recording for a few entries; no data-driven sample is possible.",
+      "sample_source": "high-value-suppliers.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-08",
+      "theme": 8,
+      "title": "Award approval and Key Decisions for the largest contracts",
+      "statement": "The largest purchases may proceed without the Key Decision, Portfolio Holder or Executive approval that their value requires. This is an indicator to test against decision records.",
+      "likelihood": 3,
+      "likelihood_justification": "One test shows a general-procurement signal at the Key Decision level: {{$.tests.split_purchases.by_threshold.500000.headline_general_procurement.windows}} general-procurement supplier windows combine payments above {{$.tests.split_purchases.by_threshold.500000.threshold}} within thirty days [metric:$.tests.split_purchases.by_threshold.500000.headline_general_procurement.windows], where an award over that value is a Key Decision [rule:CPR-04] [rule:CPR-50] and the highest band needs the Executive [rule:CPR-51]. No single general-procurement payment sits just below that level [metric:$.tests.threshold_clustering.by_threshold.500000.by_tag.general_procurement.rows]. Rubric row 3. Approval records themselves cannot be observed in the data, and no governance audit in history is adverse [history:AUD-01].",
+      "impact": 4,
+      "impact_justification": "Major on the council's scale [history:$.scoring_method.impact_scale[1]]: the general-procurement windows at this level total {{$.tests.split_purchases.by_threshold.500000.headline_general_procurement.gbp}} [metric:$.tests.split_purchases.by_threshold.500000.headline_general_procurement.gbp], and an award without its Key Decision [rule:CPR-04] carries a high possibility of legal challenge and national adverse publicity.",
+      "evidence": [
+        "rule:CPR-04",
+        "rule:CPR-50",
+        "rule:CPR-51",
+        "metric:$.tests.split_purchases.by_threshold.500000.headline_general_procurement.windows",
+        "metric:$.tests.split_purchases.by_threshold.500000.headline_general_procurement.gbp",
+        "metric:$.tests.threshold_clustering.by_threshold.500000.by_tag.general_procurement.rows"
+      ],
+      "proposed_focus": "For the general-procurement windows at the Key Decision level and the largest annualised suppliers, obtain the award decision and confirm the approver matches Appendix A.",
+      "sample_source": "split-purchases.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-09",
+      "theme": 9,
+      "title": "Care and education placements bought outside competition",
+      "statement": "Placements bought under the social care exclusion may lack the recorded reasons for the choice of provider that the rules require. Recurring placement fees are expected, so this is an indicator to test.",
+      "likelihood": 2,
+      "likelihood_justification": "Flagged items sit only in the placement tag, where recurring payments are expected: {{$.tests.split_purchases.by_threshold.25000.care_or_education_placement.windows}} placement windows cross the publication tier [metric:$.tests.split_purchases.by_threshold.25000.care_or_education_placement.windows] and {{$.tests.duplicates.different_time.by_tag.care_or_education_placement.groups}} placement repeat-amount groups appear [metric:$.tests.duplicates.different_time.by_tag.care_or_education_placement.groups]. The row F exclusion requires reasons for the choice of provider on the case notes [rule:CPR-63], which the data cannot observe. Rubric row 2. The care-purchasing audit gave Reasonable Assurance [history:AUD-18]; the Limited Assurance audit of personal budgets [history:AUD-16] covers direct payments to service users, a different purchasing route, so no repeat uplift is applied.",
+      "impact": 3,
+      "impact_justification": "Medium on the council's scale [history:$.scoring_method.impact_scale[2]]: placement spend in the window is {{$.population.tags.care_or_education_placement.gbp}} [metric:$.population.tags.care_or_education_placement.gbp], but the control at stake is a case-note record [rule:CPR-63], whose failure fits external agency criticism rather than legal challenge. The strategy records inflation pressure in purchased social care [history:$.risk_themes[1]].",
+      "evidence": [
+        "rule:CPR-63",
+        "metric:$.tests.split_purchases.by_threshold.25000.care_or_education_placement.windows",
+        "metric:$.tests.duplicates.different_time.by_tag.care_or_education_placement.groups",
+        "metric:$.population.tags.care_or_education_placement.gbp",
+        "history:AUD-18",
+        "history:AUD-16"
+      ],
+      "proposed_focus": "Sample the largest placement windows and confirm the reasons for the provider choice are recorded on the case notes.",
+      "sample_source": "split-purchases.csv",
+      "recommend_in_scope": false,
+      "repeat_uplift": null,
+      "auditor_override": false
+    },
+    {
+      "id": "R-11",
+      "theme": 11,
+      "title": "Agency staff bought without a competed contract",
+      "statement": "Agency staff may be bought above the publication tier without a competed contract or framework call-off. Framework call-offs often carry no notice of their own, so this is an indicator to test.",
+      "likelihood": 2,
+      "likelihood_justification": "The signal sits in the agency staff tag, outside the general-procurement headline, so rubric rows 5 to 3 do not apply and row 2 is the nearest fit: {{$.tests.off_contract.unmatched_by_tag.agency_staff.suppliers}} agency supplier at or above the publication tier has no matching notice [metric:$.tests.off_contract.unmatched_by_tag.agency_staff.suppliers] and {{$.tests.split_purchases.by_threshold.500000.by_tag.agency_staff.windows}} agency window crosses the Key Decision level [metric:$.tests.split_purchases.by_threshold.500000.by_tag.agency_staff.windows], against the portal quote requirement [rule:CPR-53] and the anti-avoidance rule [rule:CPR-12]. No workforce audit in history is adverse [history:AUD-14].",
+      "impact": 4,
+      "impact_justification": "Major on the council's scale [history:$.scoring_method.impact_scale[1]]: the unmatched agency spend carries an annualised estimate of {{$.tests.off_contract.unmatched_by_tag.agency_staff.annualised_estimate}} [metric:$.tests.off_contract.unmatched_by_tag.agency_staff.annualised_estimate], in the scale's Major financial range, and a purchase of that size without a competed route needs approval at the level Appendix A sets for its value [rule:CPR-50] [rule:CPR-51].",
+      "evidence": [
+        "rule:CPR-53",
+        "rule:CPR-51",
+        "rule:CPR-59",
+        "metric:$.tests.off_contract.unmatched_by_tag.agency_staff.suppliers",
+        "metric:$.tests.off_contract.unmatched_by_tag.agency_staff.annualised_estimate",
+        "metric:$.tests.split_purchases.by_threshold.500000.by_tag.agency_staff.windows"
+      ],
+      "proposed_focus": "Confirm the contract or framework under which agency staff are bought, the Monitoring Officer approval for any direct call-off, and the award approval for its value.",
+      "sample_source": "high-value-suppliers.csv",
+      "recommend_in_scope": true,
+      "repeat_uplift": null,
+      "auditor_override": false
+    }
+  ],
+  "excluded": [
+    {
+      "id": "R-10",
+      "theme": 10,
+      "title": "Grants and transfer payments that may be contracts",
+      "reason": "Rejected by the auditor: Grants will be covered by a separate grants review."
+    }
+  ],
+  "revision": {
+    "number": 2,
+    "changes": []
+  }
+}

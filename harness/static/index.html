@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit Planner Harness</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a64; --line: #e3e1da;
+  --accent: #2f5d50; --accent-ink: #ffffff; --warn: #9a5b00; --warn-bg: #fff4e0;
+  --bad: #a1322b; --bad-bg: #fde9e7; --ok: #2f6b3a; --ok-bg: #e7f3ea; --run: #24529a; --run-bg: #e7eefb;
+  --code: #f1efe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a09f97; --line: #34332e;
+    --accent: #7fb8a4; --accent-ink: #10201b; --warn: #f0b860; --warn-bg: #3a2c12;
+    --bad: #f08a80; --bad-bg: #3b1d1a; --ok: #8fd19b; --ok-bg: #1b3220; --run: #8fb3f0; --run-bg: #1c2840;
+    --code: #2a2a26;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+header { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line);
+  background: var(--panel); position: sticky; top: 0; z-index: 2; }
+header h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+header .sub { color: var(--muted); font-size: 13px; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--code); color: var(--muted); white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); } .pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.run { background: var(--run-bg); color: var(--run); } .pill.wait { background: var(--warn-bg); color: var(--warn); }
+.spacer { flex: 1; }
+.layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 57px); }
+aside { border-right: 1px solid var(--line); padding: 16px; background: var(--panel); }
+aside h2, main h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+.runlist { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.runlist button { width: 100%; text-align: left; background: none; border: 1px solid transparent; border-radius: 8px;
+  padding: 8px 10px; color: var(--ink); cursor: pointer; font: inherit; }
+.runlist button:hover { background: var(--code); }
+.runlist button.sel { border-color: var(--accent); background: var(--code); }
+.runlist .id { font-weight: 600; font-size: 13px; display: block; }
+.runlist .meta { color: var(--muted); font-size: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+select, input[type=text], textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 9px 14px;
+  font: inherit; font-weight: 600; cursor: pointer; margin-top: 10px; }
+button.primary:disabled { opacity: .45; cursor: not-allowed; }
+.note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+main { padding: 20px 24px; min-width: 0; }
+.runhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.runhead h3 { margin: 0; font-size: 18px; }
+.stages { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.stage { border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--panel); font-size: 12.5px; }
+.stage .st { margin-top: 6px; }
+.stage.running { border-color: var(--run); } .stage.waiting { border-color: var(--warn); } .stage.failed { border-color: var(--bad); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 16px 0 12px; }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; font: inherit;
+  color: var(--muted); cursor: pointer; }
+.tabs button.on { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.events { display: flex; flex-direction: column; gap: 6px; max-height: 62vh; overflow: auto; padding-right: 6px; }
+.ev { display: grid; grid-template-columns: 74px 128px 1fr; gap: 10px; font-size: 13px; padding: 6px 8px; border-radius: 8px; }
+.ev:hover { background: var(--panel); }
+.ev .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ev .who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.ev .body { white-space: pre-wrap; word-break: break-word; }
+.ev.thinking .body { color: var(--muted); font-style: italic; }
+.ev.tool .body, .ev.result .body, .ev.verify .body { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.ev.error .body { color: var(--bad); } .ev.stage, .ev.gate { background: var(--code); }
+.ev.message .body { border-left: 3px solid var(--accent); padding-left: 8px; }
+.files { display: grid; grid-template-columns: 260px 1fr; gap: 14px; }
+.filelist { list-style: none; margin: 0; padding: 0; max-height: 66vh; overflow: auto; font-size: 13px; }
+.filelist li button { width: 100%; text-align: left; background: none; border: 0; padding: 5px 8px; border-radius: 6px;
+  color: var(--ink); cursor: pointer; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filelist li button:hover, .filelist li button.sel { background: var(--code); }
+.filelist .grp { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 10px 8px 2px; }
+.viewer { min-width: 0; max-height: 66vh; overflow: auto; }
+.viewer pre { background: var(--code); padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
+.md table, table.grid { border-collapse: collapse; font-size: 12.5px; margin: 8px 0; }
+.md th, .md td, table.grid th, table.grid td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+.md code { background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
+.gate { border: 1px solid var(--warn); background: var(--warn-bg); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.gate h3 { margin: 0 0 6px; font-size: 15px; }
+.gate a, .gate a:visited { color: var(--warn); font-weight: 600; }
+.gate table { width: 100%; border-collapse: collapse; margin-top: 10px; background: var(--panel); border-radius: 8px; overflow: hidden; }
+.gate td, .gate th { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; font-size: 13px; }
+.gate td select { min-width: 110px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.err { color: var(--bad); margin-top: 8px; font-size: 13px; }
+.empty { color: var(--muted); padding: 20px 0; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--line); }
+  .stages { grid-template-columns: repeat(2, 1fr); } .files { grid-template-columns: 1fr; }
+  .ev { grid-template-columns: 1fr; gap: 2px; } main { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Procurement Audit Planner</h1>
+  <span class="sub">skills · sub-agents · human gates · agent team: a standalone harness</span>
+  <span class="spacer"></span>
+  <span id="cred" class="pill">checking…</span>
+</header>
+<div class="layout">
+  <aside>
+    <h2>Runs</h2>
+    <ul class="runlist" id="runs"></ul>
+    <div class="card">
+      <h2>New live run</h2>
+      <label for="start">Start at</label>
+      <select id="start">
+        <option value="rules">1. Extract rules (full run)</option>
+        <option value="analysts">2. Analysts (reuse rules)</option>
+        <option value="risks" selected>3. Risk register (reuse rules + analytics)</option>
+        <option value="team">5. Agent team (reuse an approved register)</option>
+      </select>
+      <button class="primary" id="go">Start run</button>
+      <div class="note" id="gonote">Each run works in its own copy of the project under runs/. Earlier stages are copied from the completed Part A run.</div>
+      <div class="err" id="goerr"></div>
+    </div>
+  </aside>
+  <main id="main"><div class="empty">Select a run.</div></main>
+</div>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let STAGES = [], current = null, es = null, tab = "activity", selFile = null, lastState = null;
+const pillFor = s => ({done:"ok", failed:"bad", running:"run", waiting:"wait"}[s] || "");
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+
+async function init() {
+  const h = await api("/api/health");
+  STAGES = h.stages;
+  const c = $("#cred");
+  c.textContent = h.credentials ? `live runs on · ${h.backend === "claude-code" ? "Claude Code login" : "API key"} · ${h.model}` : "no backend: demo only";
+  c.className = "pill " + (h.credentials ? "ok" : "wait");
+  if (!h.credentials) { $("#go").disabled = true; $("#gonote").textContent = "Sign in to Claude Code, or add ANTHROPIC_API_KEY to .env, and restart to run agents live. The demo run is browsable now."; }
+  await loadRuns();
+  select(new URLSearchParams(location.hash.slice(1)).get("run") || "demo");
+}
+
+async function loadRuns() {
+  const runs = await api("/api/runs");
+  $("#runs").innerHTML = runs.map(r => `<li><button data-id="${esc(r.id)}" class="${r.id === current ? "sel" : ""}">
+    <span class="id">${r.id === "demo" ? "Part A run (demo)" : esc(r.id)}</span>
+    <span class="meta"><span class="pill ${pillFor(r.status)}">${esc(r.status)}</span> ${esc(r.stage)}</span></button></li>`).join("");
+  $("#runs").querySelectorAll("button").forEach(b => b.onclick = () => select(b.dataset.id));
+}
+
+$("#go").onclick = async () => {
+  $("#goerr").textContent = "";
+  try {
+    const r = await api("/api/runs", {method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({start_stage: $("#start").value})});
+    await loadRuns(); select(r.id);
+  } catch (e) { $("#goerr").textContent = e.message; }
+};
+
+function select(id) {
+  current = id; selFile = null; lastState = null; location.hash = "run=" + id;
+  $("#runs").querySelectorAll("button").forEach(b => b.classList.toggle("sel", b.dataset.id === id));
+  $("#main").innerHTML = `<div class="runhead"><h3 id="rtitle"></h3><span id="rstatus" class="pill"></span><span id="rmsg" class="note"></span></div>
+    <div class="stages" id="stages"></div><div id="gate"></div>
+    <div class="tabs"><button data-t="activity">Activity</button><button data-t="outputs">Outputs</button></div>
+    <div id="tab-activity"><div class="events" id="events"></div></div>
+    <div id="tab-outputs" class="files"><ul class="filelist" id="files"></ul><div class="viewer card" id="viewer"><div class="empty">Choose a file.</div></div></div>`;
+  $("#main").querySelectorAll(".tabs button").forEach(b => b.onclick = () => setTab(b.dataset.t));
+  setTab(id === "demo" ? "outputs" : "activity");
+  if (es) es.close();
+  refresh();
+  if (id !== "demo") {
+    es = new EventSource(`/api/runs/${id}/stream`);
+    es.onmessage = m => {
+      const d = JSON.parse(m.data);
+      if (d.type === "event") addEvent(d.event);
+      if (d.type === "state") refresh();
+    };
+  } else {
+    $("#events").innerHTML = `<div class="empty">The demo is the run completed in Part A with Claude Code. Its activity happened in that session; browse its outputs here, or start a live run.</div>`;
+  }
+}
+
+function setTab(t) {
+  tab = t;
+  $("#main").querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  $("#tab-activity").style.display = t === "activity" ? "" : "none";
+  $("#tab-outputs").style.display = t === "outputs" ? "" : "none";
+}
+
+function addEvent(e) {
+  const el = document.createElement("div");
+  el.className = "ev " + e.kind;
+  el.innerHTML = `<span class="t">${esc(e.t.slice(11))}</span><span class="who">${esc(e.agent)}</span><span class="body">${esc(e.text)}</span>`;
+  const box = $("#events"); if (!box) return;
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+  box.appendChild(el);
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+async function refresh() {
+  const st = await api(`/api/runs/${current}`);
+  const key = JSON.stringify([st.status, st.stage, st.stages, st.message, st.files.length]);
+  $("#rtitle").textContent = current === "demo" ? "Part A run (demo, read-only)" : "Run " + current;
+  $("#rstatus").textContent = st.status; $("#rstatus").className = "pill " + pillFor(st.status);
+  $("#rmsg").textContent = st.message || "";
+  $("#stages").innerHTML = STAGES.map(s => `<div class="stage ${st.stages[s.id]}"><div>${esc(s.label)}</div>
+    <div class="st"><span class="pill ${pillFor(st.stages[s.id])}">${esc(st.stages[s.id])}</span></div></div>`).join("");
+  renderFiles(st.files);
+  if (key !== lastState) { lastState = key; renderGate(st); loadRuns(); }
+}
+
+function renderFiles(files) {
+  let html = "", grp = null;
+  const top = files.filter(f => !f.group), grouped = files.filter(f => f.group);
+  for (const f of [...top, ...grouped]) {
+    if (f.group !== grp) { grp = f.group; if (grp) html += `<li class="grp">${esc(grp)}/</li>`; }
+    html += `<li><button data-p="${esc(f.path)}" class="${f.path === selFile ? "sel" : ""}">${esc(f.group ? f.path.slice(f.group.length + 1) : f.path)}</button></li>`;
+  }
+  $("#files").innerHTML = html || `<li class="empty">No outputs yet.</li>`;
+  $("#files").querySelectorAll("button").forEach(b => b.onclick = () => openFile(b.dataset.p));
+}
+
+async function openFile(p) {
+  selFile = p;
+  $("#files").querySelectorAll("button").forEach(b => b.classList.toggle("sel", b.dataset.p === p));
+  const v = $("#viewer"); v.innerHTML = `<div class="empty">Loading…</div>`;
+  try {
+    const f = await api(`/api/runs/${current}/file?path=${encodeURIComponent(p)}`);
+    const more = f.truncated ? `<div class="note">… ${f.truncated} more lines not shown</div>` : "";
+    if (p.endsWith(".md")) v.innerHTML = `<div class="md">${marked.parse(f.content)}</div>` + more;
+    else if (p.endsWith(".json")) v.innerHTML = `<pre>${esc(JSON.stringify(JSON.parse(f.content), null, 2))}</pre>`;
+    else if (p.endsWith(".csv")) v.innerHTML = csvTable(f.content) + more;
+    else v.innerHTML = `<pre>${esc(f.content)}</pre>` + more;
+  } catch (e) { v.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+
+function csvTable(text) {
+  const rows = text.split("\n").filter(Boolean).map(line => {
+    const out = []; let cur = "", q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"' && line[i+1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"') q = true; else if (c === ",") { out.push(cur); cur = ""; } else cur += c;
+    }
+    out.push(cur); return out;
+  });
+  if (!rows.length) return `<div class="empty">Empty file.</div>`;
+  return `<table class="grid"><tr>${rows[0].map(h => `<th>${esc(h)}</th>`).join("")}</tr>` +
+    rows.slice(1).map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("") + `</table>`;
+}
+
+function renderGate(st) {
+  const g = $("#gate");
+  if (current === "demo" || st.status !== "waiting") { g.innerHTML = ""; return; }
+  if (st.stage === "gate1" && st.gate) {
+    const open = st.gate.rows.filter(r => !r.decision);
+    g.innerHTML = `<div class="gate"><h3>Auditor gate: decide on each risk</h3>
+      <div class="note">Read <a href="#" id="openreg">risk-register.md</a> first. Amend: say what to change. Reject: say why. The risk-assessor then applies your decisions as a revision, and the team starts once the gate check passes.</div>
+      <table><tr><th>ID</th><th>Risk</th><th>Score</th><th>Recommended</th><th>Decision</th><th>Comment</th></tr>
+      ${st.gate.rows.map(r => r.decision ? `<tr><td>${esc(r.id)}</td><td>${esc(r.title)}</td><td>${esc(r.now)}</td><td>${esc(r.scope)}</td><td>${esc(r.decision)}</td><td>${esc(r.comment)}</td></tr>` :
+        `<tr><td>${esc(r.id)}</td><td>${esc(r.title)}</td><td>${esc(r.now)}</td><td>${esc(r.scope)}</td>
+        <td><select data-id="${esc(r.id)}" class="dec"><option value="">choose…</option><option>approve</option><option>amend</option><option>reject</option></select></td>
+        <td><input type="text" data-id="${esc(r.id)}" class="com" placeholder="comment"></td></tr>`).join("")}
+      </table>
+      <div class="row2"><div><label>Reviewer</label><input type="text" id="reviewer" placeholder="your name"></div><div></div></div>
+      <button class="primary" id="submitdec" ${open.length ? "" : "disabled"}>Record decisions and revise the register</button>
+      <div class="err" id="decerr"></div></div>`;
+    $("#openreg").onclick = ev => { ev.preventDefault(); setTab("outputs"); openFile("risk-register.md"); };
+    $("#submitdec").onclick = async () => {
+      const decisions = {};
+      g.querySelectorAll("select.dec").forEach(s => decisions[s.dataset.id] = {decision: s.value,
+        comment: g.querySelector(`input.com[data-id="${s.dataset.id}"]`).value});
+      try {
+        await api(`/api/runs/${current}/decisions`, {method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({reviewer: $("#reviewer").value, decisions})});
+        setTab("activity"); refresh();
+      } catch (e) { $("#decerr").textContent = e.message; }
+    };
+  } else if (st.stage === "gate2") {
+    g.innerHTML = `<div class="gate"><h3>Auditor sign-off</h3>
+      <div class="note">Read <a href="#" id="openrev">review.md</a> (the QA verdict) and the points marked <em>for the auditor</em> in <a href="#" id="opench">challenges.md</a>.</div>
+      <div class="row2"><div><label>Name</label><input type="text" id="soname"></div>
+      <div><label>Decision</label><select id="sodec"><option>sign off</option><option>return to the team</option></select></div></div>
+      <label>Comment</label><textarea id="socom" rows="2"></textarea>
+      <button class="primary" id="sobtn">Record sign-off</button><div class="err" id="soerr"></div></div>`;
+    $("#openrev").onclick = ev => { ev.preventDefault(); setTab("outputs"); openFile("review.md"); };
+    $("#opench").onclick = ev => { ev.preventDefault(); setTab("outputs"); openFile("challenges.md"); };
+    $("#sobtn").onclick = async () => {
+      try {
+        await api(`/api/runs/${current}/signoff`, {method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({name: $("#soname").value, decision: $("#sodec").value, comment: $("#socom").value})});
+        refresh();
+      } catch (e) { $("#soerr").textContent = e.message; }
+    };
+  } else g.innerHTML = "";
+}
+
+window.addEventListener("hashchange", () => {
+  const id = new URLSearchParams(location.hash.slice(1)).get("run");
+  if (id && id !== current) select(id);
+});
+init();
+</script>
+</body>
+</html>

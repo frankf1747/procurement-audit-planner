@@ -11,6 +11,12 @@ Built by following the step-by-step guide at
 the **Skills + Sub-agents + Human gate + Agent team** architecture. The data
 is West Berkshire Council's own published material.
 
+- **Part A** (sections 1–13): the system built and run inside Claude Code.
+- **Part B** (section 14): the same system run by its own harness, a web app on
+  `http://localhost:8000` with its own agent loop, tools, team messaging and
+  gate forms. Quick start: `make setup`, `make run`. It runs on your Claude
+  Code login, or on an API key in `.env`.
+
 > **Indicators, not findings.** Everything this system produces describes
 > patterns in public data to investigate. It plans an audit; it does not
 > perform one, and it asserts no wrongdoing by the council, a department, an
@@ -31,6 +37,7 @@ is West Berkshire Council's own published material.
 11. [Running it](#11-running-it)
 12. [Guide completion record](#12-guide-completion-record)
 13. [Results of this run](#13-results-of-this-run)
+14. [Part B: the standalone harness (localhost web app)](#14-part-b-the-standalone-harness-localhost-web-app)
 
 ---
 
@@ -285,6 +292,12 @@ procurement-audit-planner/
     verify_history.py                    # findings-analyst's verifier
     checks/ run_checks.py check_quotes.py check_numbers.py check_trace.py check_samples.py
   outputs/                               # everything the system produced (see section 2)
+  harness/                               # Part B: the standalone harness (section 14)
+    app.py  pipeline.py  team.py  agent.py  tools.py  prompts.py  llm.py  sdk_backend.py  workspace.py  config.py
+    static/index.html                    #   the web UI
+  tests/test_harness.py                  # harness tests with a scripted model (no API calls)
+  Makefile  .env.example                 # make setup | make run | make test
+  runs/                                  # one isolated workspace per live run (git-ignored)
 ```
 
 ## 11. Running it
@@ -398,3 +411,157 @@ Final pack: 9 risks, 11 controls, 16 tests, **238 sampled transactions** (each v
 - Testing on fixtures and running the team caught real defects before they reached the pack: a verifier that turned one malformed rule into a second, false coverage failure; a revision rebuild that would have failed on re-run; and a separator mismatch between two components (`row_ids`) that the planner reported as `PLANNER BLOCKED` instead of working around.
 - The challenger changed the plan materially (e.g. the largest suppliers had been excluded from the award-approval test; the spend-vs-award sample missed the two largest flagged suppliers).
 - Points about approved scope were routed to the auditor, not changed by the team, exactly as designed.
+
+## 14. Part B: the standalone harness (localhost web app)
+
+Part A depended on Claude Code: it ran the agent loop, the tools, the
+sub-agents, the team messaging and the permission prompts. Part B replaces
+all of that with a small harness of our own, so the whole workflow runs from a
+web page without Claude Code. **Scope:** it runs on your machine at
+`http://localhost:8000`; it is not deployed to a public URL. (The assignment
+text asks for an independently *deployed* app; the owner chose localhost.
+Section 14.7 notes what a hosted deploy would add.)
+
+### 14.1 Run it
+
+```bash
+make setup          # .venv + requirements (pandas, openpyxl, anthropic, claude-agent-sdk, fastapi, uvicorn, pytest), creates .env
+make run            # http://localhost:8000
+make test           # harness tests (scripted model, no API calls) + the skill tests
+```
+
+**Which model backend runs the agents** (chosen automatically; the header shows it):
+
+| Backend | Needs | How the model is called |
+| --- | --- | --- |
+| `api` | `ANTHROPIC_API_KEY` in `.env` | the harness's own Messages-API tool loop (`agent.py`, `llm.py`) |
+| `claude-code` | the `claude` CLI installed and signed in (no key) | the Claude Agent SDK on your Claude Code login (`sdk_backend.py`), with Claude Code's built-in tools switched off, project settings not loaded, the harness system prompt, and only the harness tools (served from an in-process MCP server) |
+
+`HARNESS_BACKEND=api` or `=claude-code` in `.env` forces one. Either way the
+harness owns the pipeline, the prompts, the tools and their sandbox rules, the
+team mailbox and the gates; only the model call differs.
+
+The page opens on **Part A run (demo)**: the completed run from this repo,
+browsable without a key (every output rendered: register, memo, matrix,
+program, samples, challenges, review). With a key, **Start run** launches a
+live run; choose where it starts:
+
+| Start at | What runs live | Earlier inputs come from |
+| --- | --- | --- |
+| 1. Extract rules | everything, 6 stages | nothing (full run) |
+| 2. Analysts | spend-analyst + findings-analyst onward | Part A `rules.json` |
+| 3. Risk register | risk-assessor onward (good demo: reaches both gates) | Part A rules, analytics, history |
+| 5. Agent team | planner / challenger / qa-reviewer, then sign-off | Part A approved register |
+
+### 14.2 What the harness does, mapped to Part A
+
+| Part A (Claude Code) | Part B (this harness) | Where |
+| --- | --- | --- |
+| Claude Code's agent loop | `api`: a manual Messages-API tool-use loop per agent (`claude-opus-5-5`, adaptive thinking, streamed, prompt caching, server-side refusal fallback). `claude-code`: one Agent SDK session per agent, resumed turn to turn | `agent.py`, `llm.py`, `sdk_backend.py` |
+| `.claude/agents/*.md` | read at run time: the body becomes the system prompt (with `CLAUDE.md` and the agent's `MEMORY.md`); the `tools:` frontmatter decides which tools it gets | `prompts.py` |
+| Skills (`/extract-rules`, loaded skills) | `/extract-rules` runs as an agent whose role is the `SKILL.md`; agents read their skills from the workspace as before | `prompts.py`, `pipeline.py` |
+| Read / Write / Edit / Glob / Grep / Bash | `read_file`, `write_file`, `edit_file`, `list_files`, `grep`, `run`, scoped to the run's workspace | `tools.py` |
+| "never edit data/, the skills or the checks" (instructions) | **enforced**: writes to `data/`, `.claude/agents|skills/`, `scripts/checks/`, `verify_history.py`, `CLAUDE.md` are refused; paths cannot leave the workspace; commands run without a shell from an allow-list | `tools.py` |
+| Sub-agents in fresh contexts | each agent is its own conversation; the two analysts run in parallel threads | `pipeline.py` |
+| Agent team (experimental flag) | **real peer messaging**: a `send_message` tool delivers into the recipient's inbox; an agent runs whenever it has mail; the lead records `… DONE`, tells the qa-reviewer when the others are done, nudges a silent teammate once, and stops when all three report done | `team.py` |
+| Human gate in a markdown file | a web form per risk (approve / amend / reject + comment) that writes `auditor-comments.md`, then the risk-assessor revises and `build_pack.py --gate` must pass | `pipeline.py`, `static/index.html` |
+| Sign-off line in `review.md` | a sign-off form that fills the block | same |
+| Verifiers run by agents | also run **by the harness** after each stage; a stage only passes if its verifier passes | `pipeline.py` |
+| Session transcript | `runs/<id>/events.jsonl` streamed to the page (server-sent events): thinking summaries, tool calls, results, messages, verifier output | `app.py` |
+
+### 14.3 Pipeline
+
+```mermaid
+flowchart LR
+    A["rules<br/>/extract-rules agent"] -->|verify_quotes.py| B["analysts<br/>spend ∥ findings"]
+    B -->|selfcheck.py + verify_history.py| C["risks<br/>risk-assessor"]
+    C -->|build_register.py| G1{{"gate 1 form"}}
+    G1 -->|auditor-comments.md| R["revision<br/>risk-assessor"]
+    R -->|build_pack.py --gate| T["team<br/>planner ⇄ challenger ⇄ qa-reviewer"]
+    R -. gate check fails .-> G1
+    T -->|run_checks.py| G2{{"sign-off form"}}
+```
+
+Every run gets an isolated workspace, `runs/<id>/`: a copy of the brief,
+data, agents, skills, agent memory and verifier scripts, with `.venv` linked.
+The repository itself is never written to by a run. Run state lives in
+`runs/<id>/run.json`, so the page can reconnect at any time; a server restart
+marks an in-flight run as interrupted instead of pretending it is running.
+One live run works at a time (a run waiting at a gate does not block others).
+
+### 14.4 The team, as implemented
+
+```text
+planner ──PACK READY v1──▶ challenger, qa-reviewer
+challenger ──CHALLENGE #n──▶ planner        qa-reviewer ──QA v1: FAIL …──▶ planner
+planner ──RESPONSE #n / PACK READY v2──▶ …   (two challenge rounds at most, per the agent files)
+planner ──PLANNER DONE──▶ lead ─(relays)─▶ qa-reviewer
+challenger ──CHALLENGER DONE──▶ lead ─(relays)─▶ qa-reviewer
+qa-reviewer writes review.md ──QA DONE──▶ lead  →  harness runs run_checks.py  →  sign-off form
+```
+
+The lead never edits a message and passes on only the two DONE notices the
+qa-reviewer's protocol depends on. This is the agent-team behaviour Part A
+had to imitate by relaying (Claude Code 2.1.145 lacked agent teams).
+
+### 14.5 Tests
+
+`tests/test_harness.py` drives the real harness with a **scripted model**
+(canned responses per agent), so it needs no key and costs nothing:
+
+- the sandbox refuses writes to protected paths, path escapes, pipes and
+  programs off the allow-list; tool inputs are validated against their schema;
+- a workspace is a copy, and the repo is untouched;
+- peer messages flow planner → challenger/qa → planner → lead, and the
+  qa-reviewer is told when the others are done;
+- the full gate path: gate-1 form validation (every risk decided; amend and
+  reject need a comment) → revision → `build_pack.py --gate` → team →
+  `run_checks.py` (4/4) → sign-off written to `review.md`;
+- the web API serves the demo run and blocks path traversal.
+
+The real SDK request (model, adaptive thinking, effort, streaming, caching,
+refusal fallback, tool schemas) was also checked to be accepted by the
+installed `anthropic` SDK.
+
+### 14.6 Cost and time
+
+A live run calls `claude-opus-5-5` for every agent step: billed to the API key
+on the `api` backend, or counted against your Claude Code plan's usage on the
+`claude-code` backend (the SDK still reports a notional dollar figure). The
+stage-3 run in 14.8 took about 25 minutes. Starting at stage 3
+runs the risk-assessor twice plus the three-member team; a full run adds the
+rules extraction and both analysts (the spend-analyst writes and runs its own
+analysis code). Expect tens of minutes and a meaningful API bill for a full
+run; start at stage 3 for a demonstration. `HARNESS_MODEL`, `HARNESS_EFFORT`
+and `HARNESS_MAX_TURNS` in `.env` tune this.
+
+### 14.7 Limits
+
+- **Local only.** The `run` tool and agent-written Python execute on your
+  machine; the allow-list and path checks are guard rails for local use, not
+  a sandbox for untrusted users. A public deploy would need a per-run
+  container (or Managed Agents' hosted sandbox), authentication, rate limits
+  and a server-side key; none of that is built.
+- **Runs are not deterministic.** A live rerun rates some risks differently
+  from Part A (see 14.8); the method, citations and checks hold, the
+  judgments vary within them. That is what the gates are for.
+
+### 14.8 Live run (2026-10-17, `claude-code` backend, no API key)
+
+Started at stage 3 from the web app's API, with the gates answered through
+the same endpoints the forms use (signed "Live test (Claude, on Frank Fu
+instruction)"). Evidence, including the full event log, is in
+[`docs/live-run-2026-10-17/`](docs/live-run-2026-10-17/).
+
+| Step | Result |
+| --- | --- |
+| risk-assessor (live) | 11 risks rated; `build_register.py`: 0 failures, 0 warnings (~5 min) |
+| gate 1 form | 11 decisions: 9 approve, R-07 amend into scope, R-10 reject |
+| revision + gate check | revision 1 applied; `build_pack.py --gate` closed; 10 risks in scope |
+| agent team (live, peer messaging) | 12 deliveries, 27 messages, pack v1 → v4; 9 challenges over 2 rounds (8 resolved, 1 *for the auditor*: the R-09 rating); QA re-ran on every version (~19 min) |
+| harness QA run | `run_checks.py` 4/4 PASS: 10 risks, 11 controls, 17 tests, 329 sampled transactions, 43/64 rules cited |
+| sign-off form | recorded in `review.md`; run status `done` |
+
+Compared with Part A, the independent rerun rated R-05 at 12 (was 9) and R-09
+at 8 and in scope (was 6 and out); the team then challenged the R-09 rating
+and passed it to the auditor rather than changing it.

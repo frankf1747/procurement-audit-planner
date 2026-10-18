@@ -8,3 +8,8 @@ __pycache__/
 
 # Local Claude Code settings (per-machine)
 .claude/settings.local.json
+
+# Part B harness
+.env
+runs/
+.pytest_cache/

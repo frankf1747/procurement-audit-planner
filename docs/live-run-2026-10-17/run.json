@@ -1,0 +1,30 @@
+{
+  "id": "20261017-231954-4527",
+  "created": "2026-10-17T23:19:54",
+  "start_stage": "risks",
+  "status": "done",
+  "stage": "gate2",
+  "stages": {
+    "rules": "skipped",
+    "analysts": "skipped",
+    "risks": "done",
+    "gate1": "done",
+    "team": "done",
+    "gate2": "done"
+  },
+  "message": "sign off by Live test (Claude, on Frank Fu instruction)",
+  "verify": {
+    "register builder": {
+      "ok": true,
+      "tail": "risks rated: 10; excluded: 1 (dropped for citations: 0); method: council; revision: 1; decisions recorded: 10/10 rated risks (+1 rejected); 0 failures, 0 warnings\nwritten: outputs/risk-register.md, outputs/auditor-comments.md"
+    },
+    "gate check": {
+      "ok": true,
+      "tail": "gate closed: register revision 1, 11 decisions by Live test (Claude, on Frank Fu instruction) dated 2026-10-17\napproved, in scope: R-01 (12), R-02 (12), R-03 (12), R-04 (9), R-05 (12), R-06 (9), R-07 (4), R-08 (12), R-09 (8), R-11 (8)\nnot in scope: R-10 (reject)"
+    },
+    "QA checks": {
+      "ok": true,
+      "tail": "   SUMMARY trace: rules=64 rules_cited=43 rules_not_tested=21 approved_in_scope=10 planned=10 high_risks=9 challenges=9 open=0 failures=0\n== check_samples.py\n   SUMMARY samples: transactions_checked=329 in_program=283 workbooks=3 failures=0\n\n| Check | Result | Summary |\n|---|---|---|\n| quotes | PASS | quotes: rules=64 register_excerpts=27 failures=0 |\n| numbers | PASS | numbers: figures_checked=372 allowed_values=3129 failures=0 |\n| trace | PASS | trace: rules=64 rules_cited=43 rules_not_tested=21 approved_in_scope=10 planned=10 high_risks=9 challenges=9 open=0 failures=0 |\n| samples | PASS | samples: transactions_checked=329 in_program=283 workbooks=3 failures=0 |\n\nVERDICT: READY FOR SIGN-OFF (4/4 checks pass)"
+    }
+  }
+}
